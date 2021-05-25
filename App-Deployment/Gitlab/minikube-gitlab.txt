@@ -1,0 +1,31 @@
+Minikube master node on KVM VM with none driver inside.
+
+
+
+# Set MINIKUBE_HOME=/media/daniel/Data/Dano/gitlab => this location is on different hard drive.
+# This is workaround, if you want to deploy minikube instance on different hard drive than that
+# of where your system is installed.
+
+MINIKUBE_HOME=/media/daniel/Data/Dano/gitlab
+
+# Create a minimal minikube master node, with kvm-network specified to that where the worker node
+# will be created.
+
+sudo minikube start --driver=none --container-runtime=docker --cni=calico --kubernetes-version=1.19.10
+
+# In case calico fails, it is most likely failing to get IP address via invalid regex for your net interfaces
+kubectl set env daemonset/calico-node -n kube-system IP_AUTODETECTION_METHOD=interface=<regex-to-your-net-iface>
+
+Worker node created directly via KVM, added to minikube cluster.
+Memory to 6144MiB.
+CPUs to 3.
+Disk to 64GB volume.
+Network "default".
+
+# Install kubernetes using kubeadm.md guide but using this command instead of the one provided in the guide, to preserve versioning:
+
+yum install -y kubelet-1.19.10 kubeadm-1.19.10 kubectl-1.19.10 --disableexcludes=kubernetes
+
+Mark master node as master only, make worker node do all the job.
+Add addons using minikube.
+Deploy gitlab via helm, using gitlab-minimal-values.yaml
