@@ -1,0 +1,23 @@
+global:
+  hosts:
+    # - Configure NODE-IP with the host IP of a node you want to deploy it on.
+    # - nip.io is used as a domain and to resolve subdomains.
+    domain: NODE-IP.nip.io
+    externalIP: NODE-IP
+
+  # - We want to use free CE - Community Edition.
+  # - If you wish to use (paid) Enterprise Edition, then use global.edition=ee.
+  edition: ce
+
+# - Use the nginx-ingress we deploy, not the one provided by the gitlab chart.
+nginx-ingress:
+  enabled: false
+
+certmanager-issuer:
+  # - Configure YOUR@MAIL.DOMAIN with your mail address. This address will be used
+  # for Let's Encrypt auto-generated certificate. This certificate will allow
+  # https traffic to your gitlab instance.
+  email: YOUR@MAIL.DOMAIN
+
+# Freeze on a certain version of Gitlab.
+gitlabVersion: 13.12

@@ -1,7 +1,6 @@
 Prerequisites
 * Kubernetes cluster deployed
 * Installed Helm
-* Installed GitLab prerequisites
 
 1. Install GitLab
 ```

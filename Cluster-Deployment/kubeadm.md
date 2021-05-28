@@ -19,7 +19,12 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 # load it via kubectl
 curl https://docs.projectcalico.org/manifests/calico.yaml -O
 kubectl apply -f calico.yaml
+# Option 1.
 kubectl set env daemonset/calico-node -n kube-system IP_AUTODETECTION_METHOD="can-reach=8.8.8.8"
+# Option 2.
+# Example regex: interface=eth.*
+# Example regex: interface=enp.*
+kubectl set env daemonset/calico-node -n kube-system IP_AUTODETECTION_METHOD=interface=<REGEX-TO-YOUR-NET-IFACE>
 ```
 ```
 # You can install calicoctl on worker nodes too

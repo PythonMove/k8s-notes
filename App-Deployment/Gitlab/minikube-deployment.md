@@ -1,29 +1,51 @@
 > **NOTE:** This deployment guide is fetched from [gitlab docs](https://docs.gitlab.com/charts/development/minikube/).
 
+## Prerequisites
+* Installed Minikube.
+* Installed Helm3.
+
 1. Start minikube instance:  
 ```
-minikube start --driver=kvm2 --cpus=4 --memory=10g --disk-size=64g --kubernetes-version=1.19.9 --container-runtime=docker --cni=calico --dns-domain=k8s.local
+minikube start --driver=kvm2 --cpus=4 --memory=10g --disk-size=96g --kubernetes-version=1.19.10 --container-runtime=docker --cni=calico
 ```
-> **NOTE:** You may have to wait a bit. On my machine (i7-8750H 6c/12t, 16GB RAM) it took about 15-20 minutes to create all pods.
 
 2. Add minikube addons:  
+Ingress - (**Required**) - Enable ingress for proper functioning of Gitlab.
 ```
 minikube addons enable ingress
+```
+Metrics-server - (**Optional**) - Enable only if you want to see K8s node/pod HW usage.
+```
+minikube addons enable metrics-server
+```
+Dashboard - (**Optional**) - Enable only if you want to use K8s GUI.
+```
 minikube addons enable dashboard
 ```
 
-3. Create a self-signed ca root certificate (**NOT VERIFIED - GOOGLE CHROME DID NOT ACCEPT .CRT FILE**):  
+3. Deploy Gitlab helm charts:
+```
+helm repo add gitlab https://charts.gitlab.io/
+helm repo update
+helm upgrade --install gitlab gitlab/gitlab \
+  --timeout 600s \
+  --set global.hosts.domain=$(minikube ip).nip.io \
+  --set global.hosts.externalIP=$(minikube ip) \
+  -f Values/gitlab-complete-values.yaml
+```
+> **NOTE:** You may have to wait a bit. On my machine (i7-8750H 6c/12t, 16GB RAM) it took about 15-20 minutes to create all pods. Consider setting higher timeout if you have older/less powerful machine.
+
+4. Create a self-signed ca root certificate:  
 ```
 sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ~/gitlab-selfsigned.key -out ~/gitlab-selfsigned.crt
 ```
 Afterwards import the key to the google chrome certificates.
+> **NOTE:** **This step on my machine did not create certificate which Google Chrome accepts**, but not having valid certificate does not prevent you from accessing the Gitlab page. You just have to ignore invalid certificate for now and can solve it later.
 
-4. Go to the gitlab page via browser:  
+5. Go to the gitlab page via browser:  
 ```
 https://gitlab.$(minikube ip).nip.io
 ```
-
-5. Ignore invalid certificate or add your self-signed ca root certificate from step 3.
 
 6. Retrieve password for root user to login to gitlab:  
 ```

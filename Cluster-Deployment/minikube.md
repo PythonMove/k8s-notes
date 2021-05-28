@@ -104,7 +104,13 @@ If you don't specify driver, Minikube will start the cluster using either KVM or
 Minikube can be told what HW requirements to place on VMs, if KVM or Virtualbox is used as driver. default values are:  
 * --cpus=2
 * --disk-size=20000mb
-* --memory=2g  
+* --memory=2g
+
+# Deploying the VM to other disk
+If you want to deploy minikube VM instance on different hard drive than that of where your system is installed, set environment variable MINIKUBE_HOME to path which is on different hard drive.
+```
+export MINIKUBE_HOME=<path-mounted-on-different-hard-drive>  
+```
 
 ## Start single-node Minikube cluster with default values
 ```

@@ -1,6 +1,6 @@
 > **NOTE**:
 > * Follow this guide on all nodes with an user with admin privileges.
-> * This guide was written for **CentOS 8**. 
+> * This guide was written for fresh installation of **CentOS 8**.
 
 1. Update the system:
 ```
@@ -51,15 +51,6 @@ EOF
 mkdir -p /etc/systemd/system/docker.service.d
 ```
 ```
-# Create proxy configuration file
-touch /etc/systemd/system/docker.service.d/http-proxy.conf
-# Edit http-proxy in following manner:
-[Service]
-HTTPS_PROXY="<IPv4-Proxy-Server>"
-HTTP_PROXY="<IPv4-Proxy-Server>"
-NO_PROXY="<List-of-IPv4-addresses-to-exclude-from-proxying-separated-by-colon>"
-```
-```
 # Start Docker service
 systemctl enable docker.service
 systemctl daemon-reload
@@ -88,22 +79,20 @@ sysctl net.bridge.bridge-nf-call-ip6tables=1
 ```
 ```
 # Configure firewall ON MASTER NODE
-sudo firewall-cmd --zone=public --permanent --add-port={179,2379,2380,6443,10250,10251,10252}/tcp
-sudo firewall-cmd --zone=public --permanent --add-rich-rule "rule family=ipv4 source address=172.31.0.205/32 accept"
-sudo firewall-cmd --zone=public --permanent --add-rich-rule "rule family=ipv4 source address=172.17.0.0/16 accept"
-sudo firewall-cmd --zone=public --permanent --add-service={ssh,cockpit,dhcpv6-client,dns,https}
-sudo firewall-cmd --zone=public --permanent --add-masquerade
-sudo firewall-cmd --reload
+firewall-cmd --zone=public --permanent --add-port={179,2379,2380,6443,10250,10251,10252}/tcp
+firewall-cmd --zone=public --permanent --add-service={dns,https}
+firewall-cmd --zone=public --permanent --add-rich-rule "rule family=ipv4 source address=172.17.0.0/16 accept"
+firewall-cmd --zone=public --permanent --add-masquerade
+firewall-cmd --reload
 ```
 ```
 # Configure firewall ON WORKER NODE
-sudo firewall-cmd --zone=public --permanent --add-port={179,10250}/tcp
-sudo firewall-cmd --zone=public --permanent --add-port=30000-32767/tcp
-sudo firewall-cmd --zone=public --permanent --add-rich-rule "rule family=ipv4 source address=172.31.0.205/32 accept"
-sudo firewall-cmd --zone=public --permanent --add-rich-rule "rule family=ipv4 source address=172.17.0.0/16 accept"
-sudo firewall-cmd --zone=public --permanent --add-service={ssh,cockpit,dhcpv6-client,dns,https}
-sudo firewall-cmd --zone=public --permanent --add-masquerade
-sudo firewall-cmd --reload
+firewall-cmd --zone=public --permanent --add-port={179,10250}/tcp
+firewall-cmd --zone=public --permanent --add-port=30000-32767/tcp
+firewall-cmd --zone=public --permanent --add-service={dns,https}
+firewall-cmd --zone=public --permanent --add-rich-rule "rule family=ipv4 source address=172.17.0.0/16 accept"
+firewall-cmd --zone=public --permanent --add-masquerade
+firewall-cmd --reload
 ```
 6. Install kubeadm
 ```
@@ -121,7 +110,7 @@ EOF
 ```
 ```
 # Install kubeadm, kubectl and kubelet
-yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+yum install -y kubelet-1.19.10 kubeadm-1.19.10 kubectl-1.19.10 --disableexcludes=kubernetes
 systemctl enable --now kubelet
 ```
 
@@ -140,4 +129,15 @@ gpgcheck=1
 repo_gpgcheck=0
 gpgkey=https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 """
+```
+**If you are behind proxy, Docker might have troubles while connecting to the outside internet.**  
+Possible solution: Set up proxy settings for Docker.
+```
+# Create proxy configuration file
+touch /etc/systemd/system/docker.service.d/http-proxy.conf
+# Edit http-proxy in following manner:
+[Service]
+HTTPS_PROXY="<IPv4-Proxy-Server>"
+HTTP_PROXY="<IPv4-Proxy-Server>"
+NO_PROXY="<List-of-IPv4-addresses-to-exclude-from-proxying-separated-by-colon>"
 ```

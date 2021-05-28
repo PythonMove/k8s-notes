@@ -28,6 +28,28 @@ front-proxy-ca          Nov 01, 2030 16:31 UTC   9y              no
 >Additionally, kubeadm informs the user if the certificate is externally managed; in this case, the user should take care of managing certificate renewal manually/using other tools.
 >
 ```
+# Get all supported resources by your cluster and their shortcuts
+kubectl api-resources
+```
+```
+# Getting output in JSON or YAML
+# Example
+kubectl get pods -oyaml
+kubectl get pods -ojson
+```
+```
+# On master node, get kubeadm join command
+kubeadm token create --print-join-command
+```
+```
+# If you need to clear changes by failed kubeadm init/join
+kubeadm reset --force
+```
+```
+# Mark master node as master only, make worker node do all the job.
+kubectl taint nodes master Podless:NoSchedule
+```
+```
 # Adding/deleting roles
 # kubectl label node <node-name> node-role.kubernetes.io/<role-name>=<role-name>
 
@@ -36,6 +58,10 @@ front-proxy-ca          Nov 01, 2030 16:31 UTC   9y              no
 
 # Deleting role "worker" from node "worker01"
 > kubcetl label node worker01 node-role.kubernetes.io/worker-
+```
+```
+# Delete taint "master" from master nodes, to allow scheduling pods on master node
+kubectl taint nodes <master-node-name> node-role.kubernetes.io/master-
 ```
 ```
 # Getting information about resources

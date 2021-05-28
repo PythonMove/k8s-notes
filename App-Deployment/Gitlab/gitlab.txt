@@ -1,0 +1,263 @@
+Pre-Install environment & Notes:
+Proxy was disabled in Docker and also system-wide.
+Specifying externalIP, version or namespace in helm upgrade command failed previous installation attempts, as the gitlab would throw „Unsupported upgrade path“ error.
+
+Gitlab install command:
+helm upgrade --install gitlab gitlab/gitlab --set global.hosts.domain=x7 --set certmanager-issuer.email=daniel.lacko@tietoevry.com --set global.edition=ce –debug
+
+After this command, wait about 5 minutes to get most of the pods and jobs running. You will have a few pods in crashLoopBackOff, init:crashLoopBackOff or pending status.
+
+Pods with problems/exceptions:
+#Note: ignore hashes after pod names, mind only real names.
+
+Pending:
+gitlab-gitaly-0
+gitlab-minio-7754b8d9d9-6gntb
+gitlab-postgresql-0
+gitlab-prometheus-server-6878cb55d4-5sp82
+gitlab-redis-master-0
+
+crashLoopBackOff:
+gitlab-gitlab-runner-85d64d6897-b5nv8
+gitlab-redis-master-0 (After solving pending status)
+
+init:crashLoopBackOff:
+gitlab-sidekiq-all-in-1-v1-567f7f847d-pjq9f
+gitlab-webservice-default-6f6549fcfc-gs4vx
+gitlab-webservice-default-6f6549fcfc-nglsm
+
+Solving defective pods
+
+There are many pods which require Persistent volumes. You can check by command:
+
+kubectl get pvc
+
+NAME                               STATUS    VOLUME         CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+data-gitlab-postgresql-0           Pending                                                           163m
+gitlab-minio                       Pending                                                           138m
+gitlab-prometheus-server           Pending                                                           138m
+redis-data-gitlab-redis-master-0   Pending                           								 163m
+repo-data-gitlab-gitaly-0          Pending                                                           163m
+
+As you can see, all pods with status "Pending" are in need of a Persistent volume. These needs for volumes are described by objects called
+PersistentVolumeClaims (hence pvc in the command above). In each volume claim, specifications for a volume are set. You can see the specs
+via command:
+
+kubectl edit pvc PVC-NAME
+
+Creating a volume for Redis
+
+Using command above, you can see redis pod requires PersistentVolume with following specs:
+spec/capacity/storage: 8Gi
+spec/accessModes: ReadWriteOnce
+spec/volumeMode: Filesystem.
+
+Don´t forget that kubernetes asigns resources via labels, so you need to create PersistentVolume with the mentioned specs and metadata/labels/app: redis.
+Example:
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: redis-volume
+  labels:
+    app: redis
+spec:
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 8Gi
+  hostPath:
+    path: "/home/student/gitlab/volumes/redis/"
+
+
+After creating the volume. Kubernetes should bind this volume to volume claim. Do this procedure for all pods with pending volume claims.
+
+Creating a volume for Minio
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: minio-volume
+  labels:
+    app: minio
+spec:
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 10Gi
+  hostPath:
+    path: "/home/student/gitlab/volumes/minio/"
+
+Creating a volume for Prometheus
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: prometheus-volume
+  labels:
+    app: prometheus
+spec:
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 8Gi
+  hostPath:
+    path: "/home/student/gitlab/volumes/prometheus/"
+
+Creating a volume for PostgreSQL:
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgresql-volume
+  labels:
+    app: postgresql
+spec:
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 8Gi
+  hostPath:
+    path: "/home/student/gitlab/volumes/postgresql/"
+
+Creating a volume for Gitaly:
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: gitaly-volume
+  labels:
+    app: gitaly
+spec:
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 50Gi
+  hostPath:
+    path: "/home/student/gitlab/volumes/gitaly/"
+
+If you create misconfigured persistentVolume and it gets bound to wrong PVC. You might have a hard time deleting it.
+kubectl delete pv PV-NAME 
+
+Command above didn´t help as it was stuck on deleting the PV. PVC have finalizers in their yaml descriptions which protect a bound volume from
+getting deleted. What helped me was running the above command and the in the second terminal running following one-liner:
+kubectl get pv | tail -n+2 | awk '{print $1}' | xargs -I{} kubectl patch pv {} -p '{"metadata":{"finalizers": null}}'
+
+This one-liner will edit finalizers which will result in completion of deleting the PV. Be wary that this might break the PVC. What happened
+was that after using the one-liner, when creating a properly configured PV, it was immediately asigned to the same wrong PVC as before. Your
+best bet is to start again. One-liner to start again:
+
+helm uninstall gitlab; sleep 180; helm upgrade --install gitlab gitlab/gitlab --set global.hosts.domain=x7 --set certmanager-issuer.email=daniel.lacko@tietoevry.com --set global.edition=ce --debug
+
+Please note that sleeping for 3 minutes is recommended for the kubernetes to have time to do cleanup. Also, you should manually delete all PVC and PV, using:
+kubectl delete pvc --all; kubectl delete pv --all 
+
+After successfully creating volumes, you should have following status:
+
+[student@x6 deployments]$ kubectl get pvc
+NAME                               STATUS   VOLUME              CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+data-gitlab-postgresql-0           Bound    postgresql-volume   8Gi        RWO                           6m6s
+gitlab-minio                       Bound    minio-volume        10Gi       RWO                           6m6s
+gitlab-prometheus-server           Bound    prometheus-volume   8Gi        RWO                           6m6s
+redis-data-gitlab-redis-master-0   Bound    redis-volume        8Gi        RWO                           6m6s
+repo-data-gitlab-gitaly-0          Bound    gitaly-volume       50Gi       RWO                           6m6s
+
+[student@x6 deployments]$ kubectl get pv
+NAME                CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                                      STORAGECLASS   REASON   AGE
+gitaly-volume       50Gi       RWO            Retain           Bound    default/repo-data-gitlab-gitaly-0                                  4m38s
+minio-volume        10Gi       RWO            Retain           Bound    default/gitlab-minio                                               4m49s
+postgresql-volume   8Gi        RWO            Retain           Bound    default/data-gitlab-postgresql-0                                   4m43s
+prometheus-volume   8Gi        RWO            Retain           Bound    default/gitlab-prometheus-server                                   6m20s
+redis-volume        8Gi        RWO            Retain           Bound    default/redis-data-gitlab-redis-master-0                           4m56s
+
+[student@x6 deployments]$ kubectl get pods
+NAME                                                  READY   STATUS             RESTARTS   AGE
+gitlab-cainjector-5c6477876c-9vvwt                    1/1     Running            0          7m20s
+gitlab-cert-manager-8547d44848-z284j                  1/1     Running            0          7m20s
+gitlab-gitaly-0                                       0/1     Running            3          7m20s
+gitlab-gitlab-exporter-659fc968bd-pjvnb               1/1     Running            0          7m20s
+gitlab-gitlab-runner-85d64d6897-p94hg                 0/1     Running            2          7m19s
+gitlab-gitlab-shell-5f767ccdbb-792zx                  1/1     Running            0          7m5s
+gitlab-gitlab-shell-5f767ccdbb-sbkf5                  1/1     Running            0          7m20s
+gitlab-issuer-1-7f22s                                 0/1     Completed          0          7m20s
+gitlab-migrations-1-2hfrl                             1/1     Running            2          7m20s
+gitlab-minio-7754b8d9d9-l7rxt                         0/1     CrashLoopBackOff   6          7m20s
+gitlab-minio-create-buckets-1-bsd6j                   1/1     Running            0          7m20s
+gitlab-nginx-ingress-controller-64d9d6d47b-dvcjd      1/1     Running            0          7m20s
+gitlab-nginx-ingress-controller-64d9d6d47b-jzqdl      1/1     Running            0          7m20s
+gitlab-nginx-ingress-default-backend-d66cb657-6x6vl   1/1     Running            0          7m20s
+gitlab-postgresql-0                                   1/2     CrashLoopBackOff   5          7m20s
+gitlab-prometheus-server-6878cb55d4-dxg55             1/2     CrashLoopBackOff   6          7m20s
+gitlab-redis-master-0                                 1/2     CrashLoopBackOff   6          7m20s
+gitlab-registry-dc7cf5b77-bdsd8                       1/1     Running            0          7m20s
+gitlab-registry-dc7cf5b77-s5lkq                       1/1     Running            0          7m20s
+gitlab-sidekiq-all-in-1-v1-567f7f847d-f5pmd           0/1     Init:2/3           1          7m19s
+gitlab-task-runner-54558fc874-wndz7                   1/1     Running            0          7m20s
+gitlab-webservice-default-6f6549fcfc-7vcvs            0/2     Init:2/3           2          7m19s
+gitlab-webservice-default-6f6549fcfc-fjvzv            0/2     Init:2/3           2          7m19s
+
+Notice there are still some pods with status of either "Running" or "Init" or "CrashLoopBackOff". You can use commands:
+kubectl describe pod POD-NAME
+kubectl logs POD-NAME
+
+to inspect the status.
+
+Inspecting the pod gitlab-gitaly-0
+Logs shows us following:
+
+[student@x6 volumes]$ kubectl logs gitlab-gitaly-0
++ /scripts/set-config /etc/gitaly/templates /etc/gitaly
+Begin parsing .erb files from /etc/gitaly/templates
+Writing /etc/gitaly/config.toml
+Copying other config files found in /etc/gitaly/templates
++ exec /bin/sh -c '"/scripts/process-wrapper"'
+Starting Gitaly
+
+*** /var/log/gitaly/gitaly.log ***
+time="2021-03-09T15:51:25Z" level=info msg="Starting GitalyversionGitaly, version 13.9.3"
+time="2021-03-09T15:51:25Z" level=warning msg="git path not configured. Using default path resolution" resolvedPath=/usr/local/bin/git
+time="2021-03-09T15:51:25Z" level=info msg="clearing disk cache object folder" path=/home/git/repositories
+time="2021-03-09T15:51:25Z" level=fatal msg="load config: config_path \"/etc/gitaly/config.toml\": mkdir /home/git/repositories/+gitaly: permission denied"
+
+Last line is of logs shows fatal message ... permission denied. Some pods will require higher privileges to edit a host system.
+
+#TODO
+You need to create a podSecurityPolicy.
+PodSecurityPolicy admission controller needs to be enabled and you need to have cluster admin privileges.
+# Note: This does not solve the problem. There is another way to try. Do the gitlab install again from scratch, but using user root.
+# Until now, I used an user with root privileges, but not root user.
+
+Failing pods labels:
+Gitaly labels:
+    app: gitaly
+    chart: gitaly-4.9.3
+    controller-revision-hash: gitlab-gitaly-845cf4857b
+    heritage: Helm
+    release: gitlab
+    statefulset.kubernetes.io/pod-name: gitlab-gitaly-0
+Gitlab runner labels:
+    app: gitlab-gitlab-runner
+    chart: gitlab-runner-0.25.0
+    heritage: Helm
+    pod-template-hash: 85d64d6897
+    release: gitlab
+Minio labels:
+    app: minio
+    chart: minio-0.4.3
+    component: app
+    heritage: Helm
+    pod-template-hash: 7754b8d9d9
+    release: gitlab
+Postgresql labels:
+    app: postgresql
+    chart: postgresql-8.9.4
+    controller-revision-hash: gitlab-postgresql-c486d48db
+    heritage: Helm
+    release: gitlab
+    role: master
+    statefulset.kubernetes.io/pod-name: gitlab-postgresql-0
