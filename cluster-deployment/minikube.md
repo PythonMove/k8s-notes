@@ -1,8 +1,8 @@
 Follow this guide **ONLY** if you have the Minikube already installed. If you wish
-to install the Minikube, follow [Minikube install guide](install-guides/minikube.md).  
+to install the Minikube, follow [Minikube install guide](../install-guides/minikube.md).  
 
 ---
-## Useful Minikube deploy options
+## Useful Minikube deployment options
 > **NOTE:** To see all the options, use **minikube start -h**.
 
 You can specify number of nodes (virtual machines) Minikube will create when deploying cluster. This option does not work with driver=None.
@@ -66,8 +66,7 @@ This is can be used to validate minikube run command.
 ```
 --dry-run=true
 ```
-
-## Minikube useful addons:
+## Minikube useful addons
 
 To see list of all available addons:
 ```
