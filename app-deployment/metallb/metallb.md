@@ -35,7 +35,7 @@ Wait for metallb pods to enter into running status.
 ```
 watch -n 10 -- kubectl get pods -n metallb-system
 ```
-MetalLB’s pods will still start, but will remain idle until you define and deploy a configmap. See configuration step. If pods did not enter into running state, see [k8s troubleshooting guide](kubernetes-guides/troubleshooting.md).
+MetalLB’s pods will still start, but will remain idle until you define and deploy a configmap. See configuration step. If pods did not enter into running state, see [k8s troubleshooting guide](../../kubernetes-guides/troubleshooting.md).
 
 ## Configuration - TODO
 I dropped MetalLB deployment mid-way as it turned out I won't need it. For configuration, see [Official MetalLB configuration docs](https://metallb.universe.tf/configuration/).

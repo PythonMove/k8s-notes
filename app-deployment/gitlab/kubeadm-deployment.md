@@ -35,13 +35,13 @@ in specifications. For other architectures, check [Gitlab reference architecture
 # System update & Kubernetes installation
 > **NOTE:** Skip this step if you are already up to date. If you do not have physical access to machines then reboot them at your own risk.
 
-For this step, you can use [kubeadm install guide](install-guides/kubeadm.md). After you are done, continue with Kubeadm cluster deployment step.
+For this step, you can use [kubeadm install guide](../../install-guides/kubeadm.md). After you are done, continue with Kubeadm cluster deployment step.
 
 # Kubeadm cluster deployment  
-For this step, you can use [kubeadm cluster deployment guide](cluster-deployment/kubeadm.md). After you are done, continue with Helm3 installation step.  
+For this step, you can use [kubeadm cluster deployment guide](../../cluster-deployment/kubeadm.md). After you are done, continue with Helm3 installation step.  
 
 # Helm3 installation
-For this step, you can use [helm install guide](install-guides/helm3.md). After you are done, continue with Gitlab deployment step.
+For this step, you can use [helm install guide](../../install-guides/helm3.md). After you are done, continue with Gitlab deployment step.
 
 # Gitlab deployment
  1. Deploy nginx-ingress.  
@@ -52,7 +52,7 @@ More on nginx-ingress baremetal deploy here:
   * [deployment options](https://kubernetes.github.io/ingress-nginx/deploy/#bare-metal)
   * [baremetal considerations](https://kubernetes.github.io/ingress-nginx/deploy/baremetal/#over-a-nodeport-service)  
 
-2. Edit [gitlab helm values](app-Deployment/gitlab/values/kubeadm-baremetal-values.yaml) according to the instructions inside the file.  
+2. Edit [gitlab helm values](values/kubeadm-baremetal-values.yaml) according to the instructions inside the file.  
 > **Gitlab Helm values reference:** You can find full helm chart values with explanations for gitlab [here](https://gitlab.com/gitlab-org/charts/gitlab/-/blob/master/values.yaml).  
 
 3. Deploy Gitlab using helm.
@@ -200,7 +200,7 @@ TODO - Current state of gitlab is functional, but you can access gitlab only fro
 
 # Troubleshooting
 **General Troubleshooting**  
-Use [k8s-troubleshooting-guide](kubernetes-guides/troubleshooting.md) in case you have encountered other, not mentioned errors.
+Use [k8s-troubleshooting-guide](../../kubernetes-guides/troubleshooting.md) in case you have encountered other, not mentioned errors.
 
 **Error: Internal error occurred: failed calling webhook "validate.nginx.ingress.kubernetes.io":**  
 If this happens, most of the times simple gitlab reinstall helped.

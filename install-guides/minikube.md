@@ -96,4 +96,4 @@ sudo firewall-cmd --zone=public --permanent --add-rich-rule 'rule family=ipv4 so
 ```
 
 At this point, you should be done with the installation of Minikube. If you wish
-to deploy a cluster using Minikube, follow the [Minikube cluster deployment guide](cluster-deployment/minikube.md).
+to deploy a cluster using Minikube, follow the [Minikube cluster deployment guide](../cluster-deployment/minikube.md).

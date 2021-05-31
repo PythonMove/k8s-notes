@@ -9,7 +9,7 @@ Wait for ingress-nginx-controller pod to enter into running state.
 ```
 watch -n 10 -- kubectl get pods -n ingress-nginx
 ```
-If the pod entered into running state, then deployment should be successful. Otherwise, use [k8s troubleshooting guide](kubernetes-guides/troubleshooting.md).
+If the pod entered into running state, then deployment should be successful. Otherwise, use [k8s troubleshooting guide](../../kubernetes-guides/troubleshooting.md).
 
 More on nginx-ingress deployment here:
   * [deployment options](https://kubernetes.github.io/ingress-nginx/deploy)

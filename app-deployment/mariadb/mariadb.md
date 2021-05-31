@@ -4,7 +4,7 @@ We are going to deploy a database for our application called "Chatty". For this 
 Kubernetes by default pulls image from docker hub if the image is not already present. If you want to deploy local image, **you have to build the image on a node hosting the pod**.
 
 ## Docker build
-We need to start a database and initialize it with a [database table](app-Deployment/mariadb/docker-resources/chatty.sql) for our app. To do so, we need to alter MariaDB docker image a bit and build our own image. See the [Dockerfile](app-Deployment/mariadb/docker-resources/Dockerfile). Let's build the database:  
+We need to start a database and initialize it with a [database table](docker-resources/chatty.sql) for our app. To do so, we need to alter MariaDB docker image a bit and build our own image. See the [Dockerfile](docker-resources/Dockerfile). Let's build the database:  
 ```
 docker build -t chatty-db:0.0.1 docker-resources/
 ```
@@ -59,4 +59,4 @@ Wait for mariadb to enter into running state.
 watch -n 10 -- kubectl get pods -n kube-system
 ```
 
-If mariadb entered into running state, deployment should be successful. Otherwise, use [k8s troubleshooting guide](kubernetes-guides/troubleshooting.md).
+If mariadb entered into running state, deployment should be successful. Otherwise, use [k8s troubleshooting guide](../../kubernetes-guides/troubleshooting.md).
