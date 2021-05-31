@@ -100,4 +100,4 @@ sudo yum -y install yum-utils vim tmux wget
   ```
 
 At this point, you should be done with the installation of Minikube. If you wish
-to deploy a cluster using Minikube, follow the [Minikube cluster deployment guide](Deployment-Guides/Cluster-Deployment/minikube.md).
+to deploy a cluster using Minikube, follow the [Minikube cluster deployment guide](cluster-deployment/minikube.md).

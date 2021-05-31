@@ -46,18 +46,18 @@ kubeadm token create --print-join-command
 kubeadm reset --force
 ```
 ```
-# Mark master node as master only, make worker node do all the job.
-kubectl taint nodes master Podless:NoSchedule
+# Mark node with NoSchedule, this node won't have any pods scheduled to it.
+kubectl taint nodes <node-name> Podless:NoSchedule
 ```
 ```
 # Adding/deleting roles
-# kubectl label node <node-name> node-role.kubernetes.io/<role-name>=<role-name>
+kubectl label node <node-name> node-role.kubernetes.io/<role-name>=<role-name>
 
 # Adding role "worker" to node "worker01"
-> kubectl label node worker01 node-role.kubernetes.io/worker=worker
+kubectl label node worker01 node-role.kubernetes.io/worker=worker
 
 # Deleting role "worker" from node "worker01"
-> kubcetl label node worker01 node-role.kubernetes.io/worker-
+kubcetl label node worker01 node-role.kubernetes.io/worker-
 ```
 ```
 # Delete taint "master" from master nodes, to allow scheduling pods on master node
@@ -65,17 +65,19 @@ kubectl taint nodes <master-node-name> node-role.kubernetes.io/master-
 ```
 ```
 # Getting information about resources
-# kubectl describe <pod|node>
+kubectl describe <pod|node>
 ```
 ```
 # Create an Object
-# kubectl apply -f <file-path>
-> kubectl apply -f mariadb_deployment.yaml
+kubectl apply -f <file-path>
+
+# Delete all changes done by applying the .yaml file.
+kubectl delete -f <file-path>
 ```
 ```
 # Execute command in container
-# kubectl exec <pod-name> <options> -- <command>
+kubectl exec <pod-name> <options> -- <command>
 
 # This command creates terminal in container and let you in
-> kubectl exec <pod-name> -it -- /bin/bash
+kubectl exec <pod-name> -it -- /bin/bash
 ```

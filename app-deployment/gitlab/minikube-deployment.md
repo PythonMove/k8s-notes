@@ -1,8 +1,20 @@
-> **NOTE:** This deployment guide is fetched from [gitlab docs](https://docs.gitlab.com/charts/development/minikube/).
+> **NOTE:** This deployment guide is fetched from [gitlab docs](https://docs.gitlab.com/charts/development/minikube/) and uses complete Gitlab deploy.
 
 ## Prerequisites
 * Installed Minikube.
 * Installed Helm3.
+
+## Hardware requirements for minimal Gitlab deploy  
+Some of Gitlab components disabled due to limited hardware allocations. There are also disabled components which do not work with Minikube.
+* 3vCPUs
+* 6GB RAM
+* 96GB Storage
+
+## Hardware requirements for complete Gitlab deploy
+There are disabled only components which do not work with Minikube.
+* 4vCPUs
+* 10GB RAM
+* 96GB Storage
 
 1. Start minikube instance:  
 ```

@@ -1,0 +1,31 @@
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  labels:
+    # These labels are optional, but considered a good practise
+    app.kubernetes.io/name: chatty-db
+    app.kubernetes.io/instance: chatty-db
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: chatty
+  name: chatty-server-db
+spec:
+  selector:
+    matchLabels:
+      app: chatty-server-db
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: chatty-server-db
+    spec:
+      containers:
+      - name: chatty-db
+        image: chatty-db:0.0.1
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: "chatty"
+          - name: MYSQL_DATABASE
+            value: "chatty"
+        ports:
+        - containerPort: 3306

@@ -1,9 +1,9 @@
 This document is supposed to be your starting line into Kubernetes. Bellow are several
 tips on what to take into consideration. After you are done reading the README:
 
-1. You can find install guides for Kubernetes in [Install-Guides](Install-Guides/).  
-2. Afterwards you can deploy a cluster using one of the [Cluster-Deployment Guides](Cluster-Deployment/).  
-3. Lastly, you can try some [App-Deployment](App-Deployment/) on the cluster.
+1. You can find install guides for Kubernetes in [Install-Guides](install-guides/).  
+2. Afterwards you can deploy a cluster using one of the [Cluster-Deployment Guides](cluster-deployment/).  
+3. Lastly, you can try some [App-Deployment](app-deployment/) on the cluster.
 
 ## HW - Hardware allocations
 

@@ -1,5 +1,5 @@
 Follow this guide **ONLY** if you have the Minikube already installed. If you wish
-to install the Minikube, follow [Minikube install guide](Install-Guides/minikube.md).  
+to install the Minikube, follow [Minikube install guide](install-guides/minikube.md).  
 
 ---
 ## Useful Minikube deploy options

@@ -108,30 +108,5 @@ Let's use the same use case scenario as in ClusterIP, but this time, you also ne
 an access to the cluster from the Internet.
 
 #### LoadBalancer service definition example
-```
-apiVersion: v1
-kind: Service
-metadata:
-  name: chatty-loadbalancer
-  labels:
-    run: chatty-server
-#  annotations:
-#    metallb.universe.tf/address-pool: production-public-ips
-spec:
-  type: LoadBalancer
-  ports:
-  - name: loadbalancer
-    protocol: TCP
-    port: 50002
-    targetPort: 50000
-    nodePort: 31000
-  selector:
-    app: chatty-server
-#  loadBalancerIP: 192.168.122.195
-```
-
 > **TODO**: Deploy, test, explain. Locally it is available via ClusterIP and NodePort,
-but it won't get externalIP and probably shouldn't. Needs more investigation.
-
-#### Getting NodePort
-> **TODO**:
+but it won't get externalIP if we use baremetal cluster. LoadBalancer works as intended only within cloud environment, such as GKE, AWS, Azure etc. There are some implementations on enabling LoadBalancing on baremetal clusters, but I have not tried it yet.

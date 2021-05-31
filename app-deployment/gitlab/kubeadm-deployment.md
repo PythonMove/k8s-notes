@@ -35,25 +35,26 @@ in specifications. For other architectures, check [Gitlab reference architecture
 # System update & Kubernetes installation
 > **NOTE:** Skip this step if you are already up to date. If you do not have physical access to machines then reboot them at your own risk.
 
-For this step, you can use [kubeadm install guide](Install-Guides/kubeadm.md). After you are done, continue with Kubeadm cluster deployment step.
+For this step, you can use [kubeadm install guide](install-guides/kubeadm.md). After you are done, continue with Kubeadm cluster deployment step.
 
 # Kubeadm cluster deployment  
-For this step, you can use [kubeadm cluster deployment guide](Cluster-Deployment/kubeadm.md). After you are done, continue with Helm3 installation step.  
+For this step, you can use [kubeadm cluster deployment guide](cluster-deployment/kubeadm.md). After you are done, continue with Helm3 installation step.  
 
 # Helm3 installation
-For this step, you can use [helm install guide](Install-Guides/helm3.md). After you are done, continue with Gitlab deployment step.
+For this step, you can use [helm install guide](install-guides/helm3.md). After you are done, continue with Gitlab deployment step.
 
 # Gitlab deployment
-> **Gitlab Helm values reference:** You can find full helm chart values with explanations for gitlab [here](https://gitlab.com/gitlab-org/charts/gitlab/-/blob/master/values.yaml).  
-
-1. Deploy nginx-ingress.  
+ 1. Deploy nginx-ingress.  
 ```
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.46.0/deploy/static/provider/baremetal/deploy.yaml
 ```
 More on nginx-ingress baremetal deploy here:
   * [deployment options](https://kubernetes.github.io/ingress-nginx/deploy/#bare-metal)
-  * [baremetal considerations](https://kubernetes.github.io/ingress-nginx/deploy/baremetal/#over-a-nodeport-service)
-2. Edit [gitlab helm values](App-Deployment/Gitlab/Values/kubeadm-baremetal-values.yaml) according to the instructions inside the file.  
+  * [baremetal considerations](https://kubernetes.github.io/ingress-nginx/deploy/baremetal/#over-a-nodeport-service)  
+
+2. Edit [gitlab helm values](app-Deployment/gitlab/values/kubeadm-baremetal-values.yaml) according to the instructions inside the file.  
+> **Gitlab Helm values reference:** You can find full helm chart values with explanations for gitlab [here](https://gitlab.com/gitlab-org/charts/gitlab/-/blob/master/values.yaml).  
+
 3. Deploy Gitlab using helm.
 ```
 helm repo add gitlab https://charts.gitlab.io/
@@ -184,9 +185,23 @@ Check pods, all should be running or completed.
 ```
 kubectl get pods -o wide
 ```
-If they are not running, check **Troubleshooting** step.
+If they are not running, check **Troubleshooting**, otherwise continue. Get endpoint address for gitlab webservice.
+```
+kubectl get ep
+```
+Open up new terminal. Deploy busybox into the same namespace where gitlab is. Afterwards try downloading login page of our Gitlab deployment.
+```
+kubectl run -it busybox --image=busybox -- /bin/sh
+wget <pod-ip>:8080
+```
+If you downloaded **index.html**, try opening it in a browser and it should render Gitlab login page. If this is the case, your Gitlab deployment should be successful.  
+6. Exposing Gitlab  
+TODO - Current state of gitlab is functional, but you can access gitlab only from within the cluster. It is needed to expose Gitlab outside of cluster, to make it publicly available or at least within local network. One way of accomplishing this is to use NodePort service, but this would make the installation of NGINX-Ingress pointless. Ingress is needed as loadBalancer for Gitlab. You have to define and apply working ingress resource, which would expose the Gitlab.
 
 # Troubleshooting
+**General Troubleshooting**  
+Use [k8s-troubleshooting-guide](kubernetes-guides/troubleshooting.md) in case you have encountered other, not mentioned errors.
+
 **Error: Internal error occurred: failed calling webhook "validate.nginx.ingress.kubernetes.io":**  
 If this happens, most of the times simple gitlab reinstall helped.
 ```
@@ -234,40 +249,3 @@ helm uninstall gitlab; sleep 180
 kubectl delete pvc --all; kubectl delete pv --all
 ```
 Wait of 3 minutes is used for Kubernetes to let it clean itself. You should also delete all remainders of PVs or PVCs from previous deploy, then go back to the Gitlab deployment step.  
-
-**Pod troubleshooting**
-Often times there are warnings or errors which can help you in debugging.
-```
-kubectl describe pod <pod-name>
-kubectl logs -f <pod-name>
-kubectl logs -f <pod-name> <container-name>
-```
-If there are no helpful messages, check pods in kube-system namespace. This namespace hosts pods that run the kubernetes. You can find logs there about scheduling of resources, DNS, proxies, API calls, Networking plugins etc.
-```
-kubectl describe pod -n kube-system <pod-name>
-kubectl logs -f -n kube-system <pod-name>
-kubectl logs -f -n kube-system <pod-name> <container-name>
-```
-Another good place to look for logs is kubelet service running on the system.
-```
-systemctl status kubelet
-journalctl -f -u kubelet
-```
-Other system tools you can use:
-```
-firewall-cmd # Check firewall rules etc.
-# Example, list rules in all zones
-firewall-cmd --list-all
-# Example, reload firewall
-firewall-cmd --reload
-...
-tcpdump # Packet capture tool, useful when inspecting node traffic
-# Example, On target machine, check if HTTP/HTTPS protocol communication from your device is reaching the target machine
-tcpdump -i <net-iface> "ip src <expected-source-ip> && (port 80 || port 443)"
-...
-systemctl # Check system services
-...
-ss # Check for open ports on the host system
-# Show only listening sockets, both TCP and UDP with the respective PIDs using sockets and show all ports in numeric format (do not resolve numbers).
-ss -tulpn
-```
